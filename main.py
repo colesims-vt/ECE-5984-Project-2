@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
+import sklearn.metrics
+
 
 # This is necessary to show lots of columns in pandas 0.12.
 # Not necessary in pandas 0.13.
@@ -17,17 +19,20 @@ pd.set_option('display.max_columns', 60)
 cwd = os.getcwd()
 
 # Filepaths
-tsla_file = cwd + '\\tsla_nasdaq_alltime.csv'
-cpia_file = cwd + '\\CPIAUCSL.csv'
-dff_file = cwd + '\\DFF.csv'
-dj_file = cwd + '\\DJIA.csv'
-gdp_file = cwd + '\\GDP.csv'
-lith_file = cwd + '\\lithium_commodity_data.csv'
-t10_file = cwd + '\\T10YIE.csv'
-ted_file = cwd + '\\TEDRATE.csv'
-unrate_file = cwd + '\\UNRATE.csv'
-vix_file = cwd + '\\VIXCLS.csv'
-wm2_file = cwd + '\\WM2NS.csv'
+tsla_file = cwd + '/tsla_nasdaq_alltime.csv'
+cpia_file = cwd + '/CPIAUCSL.csv'
+dff_file = cwd + '/DFF.csv'
+dj_file = cwd + '/DJIA.csv'
+gdp_file = cwd + '/GDP.csv'
+lith_file = cwd + '/lithium_commodity_data.csv'
+t10_file = cwd + '/T10YIE.csv'
+ted_file = cwd + '/TEDRATE.csv'
+unrate_file = cwd + '/UNRATE.csv'
+vix_file = cwd + '/VIXCLS.csv'
+wm2_file = cwd + '/WM2NS.csv'
+tweet_file = cwd + '/tweets_Prepared.csv'
+volume_file = cwd + '/tesla_volume_17-22.csv'
+gasprice_file = cwd + '/weekly_gas_price.csv'
 
 # Input Variables
 begin_date = '3/1/2017'
@@ -137,6 +142,7 @@ def clean_currency(x):
         return (x.replace('$', '').replace(',', ''))
     return (x)
 
+# Read feature data and add to dataset. Greyed out data negatively affected accuracy
 # Read in TSLA data
 tsla, output_data = format_dataset(filepath=tsla_file,date_label='Date',cols=['TSLA Close/Last','TSLA Volume','TSLA Open','TSLA High','TSLA Low'])
 
@@ -169,6 +175,15 @@ vix, output_data = format_dataset(filepath=vix_file, date_label='DATE', full_dat
 
 # Read in WM2NS
 wm2, output_data = format_dataset(filepath=wm2_file, date_label='DATE',interp=1, full_data=output_data)
+
+# Read in Tweet Data
+# tweet, output_data = format_dataset(filepath=tweet_file, date_label='date', interp=1, full_data=output_data)
+
+# Read in Tesla Volume Data
+# volume, output_data = format_dataset(filepath=volume_file, date_label='Date',interp=1, full_data=output_data)
+
+# Read in Weekly Gas Price Data
+# gas, output_data = format_dataset(filepath=gasprice_file, date_label='date',interp=1, full_data=output_data)
 
 # Create calculated fields
 # Read in TSLA data
@@ -222,9 +237,18 @@ x_train, x_test, y_train, y_test = train_test_split(output_data,targets,test_siz
 '''print(x_train.head())
 print(y_train.head())'''
 
+# Run linear regression
 reg = LinearRegression().fit(x_train,y_train['Target_Val'])
 y_pred = reg.predict(x_test)
 
+# Calculate MSE and R2
+y_correct = y_test['Target_Val'].to_numpy()
+linear_mse = sklearn.metrics.mean_squared_error(y_correct, y_pred)
+print('Linear MSE in Normalized Units', linear_mse, '\n')
+linear_r2 = sklearn.metrics.r2_score(y_correct, y_pred)
+print('Linear R-Squared in Normalized Units', linear_r2, '\n')
+
+# plot linear regression
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 
