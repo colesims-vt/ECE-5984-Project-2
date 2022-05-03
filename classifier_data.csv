@@ -1,0 +1,12 @@
+,clf_name,clf_score
+0,KNeighborsClassifier,0.8359788359788359
+1,SVC,0.6137566137566137
+2,NuSVC,0.8174603174603174
+3,DecisionTreeClassifier,0.8624338624338624
+4,RandomForestClassifier,0.9021164021164021
+5,AdaBoostClassifier,0.8386243386243386
+6,GradientBoostingClassifier,0.8571428571428571
+7,GaussianNB,0.5396825396825397
+8,LinearDiscriminantAnalysis,0.6984126984126984
+9,QuadraticDiscriminantAnalysis,0.5026455026455027
+10,MLPClassifier,0.791005291005291
