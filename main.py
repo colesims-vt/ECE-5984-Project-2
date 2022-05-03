@@ -224,6 +224,7 @@ targets_norm[targets_norm.columns] = target_scaler.fit_transform(targets_norm[ta
 targets = targets.filter(items=days, axis=0)
 targets_norm = targets_norm.filter(items=days,axis=0)
 calc_fields = calc_fields.filter(items=days, axis=0)
+tsla_calcs = tsla_calcs.filter(items=days,axis=0)
 
 # Join the calculated fields to the output data
 output_data = output_data.join(calc_fields)
@@ -308,7 +309,7 @@ print('Ensemble MSE: ', full_mse)
 
 output_data['direc'] = clf.predict(output_data)
 full_predict = regr2.predict(output_data)
-d = {'current':output_data['TSLA Close/Last'],'pred':full_predict,'actual':targets['Target_Val']}
+d = {'current':tsla_calcs['Close/Last'],'pred':full_predict,'actual':targets['Target_Val']}
 df = pd.DataFrame(data=d,index=output_data.index)
 df.to_csv('price_predict.csv')
 
