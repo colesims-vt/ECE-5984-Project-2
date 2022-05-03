@@ -308,7 +308,8 @@ print('Ensemble MSE: ', full_mse)
 
 output_data['direc'] = clf.predict(output_data)
 full_predict = regr2.predict(output_data)
-df = pd.DataFrame(data=full_predict,index=output_data.index)
+d = {'pred':full_predict,'actual':targets['Target_Val']}
+df = pd.DataFrame(data=d,index=output_data.index)
 df.to_csv('price_predict.csv')
 
 
