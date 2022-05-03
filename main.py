@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import mean_squared_error
 import sklearn.metrics
 
 
@@ -205,6 +207,7 @@ targets['Target_Val'] = tsla_calcs['Close/Last'].shift(20)
 targets['Target_Change'] = targets['Target_Val'] - tsla_calcs['Close/Last']
 targets['Target_Pct_Change'] = targets['Target_Change']/tsla_calcs['Close/Last']
 calc_fields['dy'] = tsla_calcs['Close/Last'] - calc_fields['1_days_ago']
+targets['direction'] = np.sign(targets['Target_Change'])
 
 # Create scaler
 scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -237,7 +240,7 @@ x_train, x_test, y_train, y_test = train_test_split(output_data,targets,test_siz
 '''print(x_train.head())
 print(y_train.head())'''
 
-# Run linear regression
+'''# Run linear regression
 reg = LinearRegression().fit(x_train,y_train['Target_Val'])
 y_pred = reg.predict(x_test)
 
@@ -261,8 +264,11 @@ plt.show()
 
 
 # Use MLPRegressor
-regr = MLPRegressor(hidden_layer_sizes=(500,500,500),random_state=5000).fit(x_train,y_train['Target_Val'])
+regr = MLPRegressor(hidden_layer_sizes=(50,50,50,50,50,50),random_state=5000,max_iter=10000).fit(x_train,y_train['Target_Val'])
 y_pred = regr.predict(x_test)
+
+for i in range(0,len(x_train.columns)):
+    print(x_train.columns[i],reg.coef_[i])
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
@@ -272,8 +278,38 @@ ax1.scatter(y_test.index,y_test['Target_Val'],s=1,c='k',marker='s',label='test')
 ax1.scatter(y_test.index,y_pred,s=1,c='r',marker='s',label='predict')
 plt.legend(loc='upper left')
 plt.title('Neural Network (MLPRegressor) Model Results')
-plt.show()
+plt.show()'''
 
+# Multi-Stage
+# 1. MLPClassifier for Price Direction
+# 2. MLPRegressor for Price Change
+x_train_1, x_test_1, y_train_1, y_test_1 = train_test_split(x_train,y_train,test_size=0.3, random_state=5000)
+clf = MLPClassifier(hidden_layer_sizes=(100,100,100,100),random_state=5000).fit(x_train_1,y_train_1['direction'])
+stage_1_score = clf.score(x_test_1,y_test_1['direction'])
+print('Stage 1 Score: ',stage_1_score)
+
+x_train['direc'] = clf.predict(x_train)
+
+x_train_2, x_test_2, y_train_2, y_test_2 = train_test_split(x_train,y_train['Target_Val'],test_size=0.3, random_state=5000)
+
+regr2 = MLPRegressor(hidden_layer_sizes=(100,100,100,100),random_state=5000,max_iter=10000).fit(x_train_2,y_train_2)
+
+y_pred = regr2.predict(x_test_2)
+
+stage_2_mse = mean_squared_error(y_test_2,y_pred)
+
+print('Stage 2 MSE: ',stage_2_mse)
+
+x_test['direc'] = clf.predict(x_test)
+y_pred_full = regr2.predict(x_test)
+full_mse = mean_squared_error(y_test['Target_Val'],y_pred_full)
+
+print('Ensemble MSE: ', full_mse)
+
+output_data['direc'] = clf.predict(output_data)
+full_predict = regr2.predict(output_data)
+df = pd.DataFrame(data=full_predict,index=output_data.index)
+df.to_csv('price_predict.csv')
 
 
 '''print(output_data.head())
