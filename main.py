@@ -14,6 +14,7 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import BayesianRidge
 from sklearn.linear_model import ElasticNet
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import SGDRegressor
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.metrics import mean_squared_error
@@ -65,7 +66,7 @@ end_wide = '3/1/2023'
 days = pd.date_range(start=begin_date, end=end_date, freq='D')
 wide_days = pd.date_range(start=begin_wide, end=end_wide, freq='D')
 
-
+raw_dataframe = pd.DataFrame()
 # Stats report class to generate DQR
 class StatsReport:
     def __init__(self):
@@ -118,9 +119,10 @@ def stats_report(df, output_file):
     print(report.to_string())
 
 
-def format_dataset(filepath, date_label, interp=0, cols=[], full_data=pd.DataFrame()):
+def format_dataset(filepath, date_label, interp=0, cols=[], full_data=pd.DataFrame(), raw_data=raw_dataframe):
     # Read in dataset
     df = pd.read_csv(filepath, parse_dates=[date_label], index_col=[date_label])
+    raw_data = pd.concat([raw_data,df])
     # Get labels
     labels = df.columns
     # Replace periods
@@ -152,7 +154,7 @@ def format_dataset(filepath, date_label, interp=0, cols=[], full_data=pd.DataFra
         full_data = full_data.join(df)
     else:
         full_data = df
-    return df, full_data
+    return df, full_data, raw_data
 
 
 def clean_currency(x):
@@ -166,50 +168,50 @@ def clean_currency(x):
 
 # Read feature data and add to dataset. Greyed out data negatively affected accuracy
 # Read in TSLA data
-tsla, output_data = format_dataset(filepath=tsla_file, date_label='Date',
-                                   cols=['TSLA Close/Last', 'TSLA Volume', 'TSLA Open', 'TSLA High', 'TSLA Low'])
+tsla, output_data, raw_dataframe = format_dataset(filepath=tsla_file, date_label='Date',
+                                   cols=['TSLA Close/Last', 'TSLA Volume', 'TSLA Open', 'TSLA High', 'TSLA Low'],raw_data=raw_dataframe)
 
 # Read in CPIAUCSL data
-cpia, output_data = format_dataset(filepath=cpia_file, date_label='DATE', interp=1, cols=['CPIAUCSL'],
-                                   full_data=output_data)
+cpia, output_data, raw_dataframe = format_dataset(filepath=cpia_file, date_label='DATE', interp=1, cols=['CPIAUCSL'],
+                                   full_data=output_data,raw_data=raw_dataframe)
 
 # Read in DFF data
-dff, output_data = format_dataset(filepath=dff_file, date_label='DATE', full_data=output_data)
+dff, output_data, raw_dataframe = format_dataset(filepath=dff_file, date_label='DATE', full_data=output_data,raw_data=raw_dataframe)
 
 # Read in DJI data (Dow Jones)
-dj, output_data = format_dataset(filepath=dj_file, date_label='DATE', full_data=output_data)
+dj, output_data, raw_dataframe = format_dataset(filepath=dj_file, date_label='DATE', full_data=output_data,raw_data=raw_dataframe)
 
 # Read in GDP data
-gdp, output_data = format_dataset(filepath=gdp_file, date_label='DATE', interp=1, full_data=output_data)
+gdp, output_data, raw_dataframe = format_dataset(filepath=gdp_file, date_label='DATE', interp=1, full_data=output_data,raw_data=raw_dataframe)
 
 # Read in lithium data
-lith, output_data = format_dataset(filepath=lith_file, date_label='Date',
+lith, output_data, raw_dataframe = format_dataset(filepath=lith_file, date_label='Date',
                                    cols=['Lith Price', 'Lith Open', 'Lith High', 'Lith Low', 'Lith Pct Change'],
-                                   full_data=output_data)
+                                   full_data=output_data,raw_data=raw_dataframe)
 
 # Read in T10YIE data
-t10, output_data = format_dataset(filepath=t10_file, date_label='DATE', full_data=output_data)
+t10, output_data, raw_dataframe = format_dataset(filepath=t10_file, date_label='DATE', full_data=output_data,raw_data=raw_dataframe)
 
 # Read in TEDRATE
-ted, output_data = format_dataset(filepath=ted_file, date_label='DATE', full_data=output_data)
+ted, output_data, raw_dataframe = format_dataset(filepath=ted_file, date_label='DATE', full_data=output_data,raw_data=raw_dataframe)
 
 # Read in UNRATE
-unrate, output_data = format_dataset(filepath=unrate_file, date_label='DATE', interp=1, full_data=output_data)
+unrate, output_data, raw_dataframe = format_dataset(filepath=unrate_file, date_label='DATE', interp=1, full_data=output_data,raw_data=raw_dataframe)
 
 # Read in VIXCLS
-vix, output_data = format_dataset(filepath=vix_file, date_label='DATE', full_data=output_data)
+vix, output_data, raw_dataframe = format_dataset(filepath=vix_file, date_label='DATE', full_data=output_data,raw_data=raw_dataframe)
 
 # Read in WM2NS
-wm2, output_data = format_dataset(filepath=wm2_file, date_label='DATE', interp=1, full_data=output_data)
+wm2, output_data, raw_dataframe = format_dataset(filepath=wm2_file, date_label='DATE', interp=1, full_data=output_data,raw_data=raw_dataframe)
 
 # Read in Tweet Data
-# tweet, output_data = format_dataset(filepath=tweet_file, date_label='date', interp=1, full_data=output_data)
+# tweet, output_data, raw_dataframe = format_dataset(filepath=tweet_file, date_label='date', interp=1, full_data=output_data,raw_data=raw_dataframe)
 
 # Read in Tesla Volume Data
-volume, output_data = format_dataset(filepath=volume_file, date_label='Date', interp=1, full_data=output_data)
+volume, output_data, raw_dataframe = format_dataset(filepath=volume_file, date_label='Date', interp=1, full_data=output_data,raw_data=raw_dataframe)
 
 # Read in Weekly Gas Price Data
-gas, output_data = format_dataset(filepath=gasprice_file, date_label='date', interp=1, full_data=output_data)
+gas, output_data, raw_dataframe = format_dataset(filepath=gasprice_file, date_label='date', interp=1, full_data=output_data,raw_data=raw_dataframe)
 
 # Create calculated fields
 # Read in TSLA data
@@ -258,7 +260,8 @@ imputer = KNNImputer()
 output_data[output_data.columns] = imputer.fit_transform(output_data[output_data.columns])
 
 # Run stats report on the data
-# stats_report(output_data,'stats_report_predictors.xlsx')
+stats_report(output_data,'stats_report_processed_data.xlsx')
+stats_report(raw_dataframe,'stats_report_raw_data.xlsx')
 
 x_train, x_test, y_train, y_test = train_test_split(output_data, targets, test_size=0.3, random_state=5000)
 
@@ -319,7 +322,9 @@ classifiers = [
     GaussianNB(),
     LinearDiscriminantAnalysis(),
     QuadraticDiscriminantAnalysis(),
-    MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), random_state=5000)]
+    MLPClassifier(hidden_layer_sizes=(100, 100, 100, 100), random_state=5000),
+    LogisticRegression()
+]
 
 # Logging for Visual Comparison
 log_cols = ["Classifier", "Accuracy", "Log Loss"]
@@ -354,12 +359,15 @@ print("=" * 30)
 
 d = {'clf_name': clf_names, 'clf_score': clf_scores}
 clf_data = pd.DataFrame(data=d)
-clf_data.to_csv('classifier_data.csv')
+clf_data.to_csv('classifier_data.csv',index=False)
 
 # Train all Regressors
 # Split the Data
 x_train, x_test, y_train, y_test = train_test_split(output_data, targets['Target_Val'], test_size=0.3,
                                                     random_state=5000)
+
+regr_names = []
+regr_scores = []
 
 regressors = [
     LinearRegression(),
@@ -384,13 +392,19 @@ for regr in regressors:
 
     print('=' * 30)
     print(name)
+    regr_names.append(name)
 
     print('****Results****')
     train_predictions = regr.predict(x_test)
     mse = mean_squared_error(y_test, train_predictions)
     print('MSE:', mse)
+    regr_scores.append(mse)
 
 print('=' * 30)
+
+d = {'regr_name': regr_names, 'regr_score': regr_scores}
+regr_data = pd.DataFrame(data=d)
+regr_data.to_csv('regression_data.csv',index=False)
 
 # Multi-Stage
 # 1. Classifier for Price Direction
@@ -407,7 +421,7 @@ x_train['direc'] = clf.predict(x_train)
 x_train_2, x_test_2, y_train_2, y_test_2 = train_test_split(x_train, y_train['Target_Val'], test_size=0.3,
                                                             random_state=5000)
 
-regr2 = CatBoostRegressor(silent=True).fit(x_train_2, y_train_2)
+regr2 = CatBoostRegressor(depth=4, learning_rate=0.15, silent=True).fit(x_train_2, y_train_2)
 
 y_pred = regr2.predict(x_test_2)
 
@@ -419,10 +433,10 @@ x_test['direc'] = clf.predict(x_test)
 y_pred_full = regr2.predict(x_test)
 full_mse = mean_squared_error(y_test['Target_Val'], y_pred_full)
 
-print('Ensemble MSE: ', full_mse)
+print('Multi-Stage MSE: ', full_mse)
 
 # Choose Best Model for Output (this is Single Stage CatBoost)
-x_train, x_test, y_train, y_test = train_test_split(output_data, targets['Target_Val'], test_size=0.3, random_state=5000)
+'''x_train, x_test, y_train, y_test = train_test_split(output_data, targets['Target_Val'], test_size=0.3, random_state=5000)
 
 model_CBR = CatBoostRegressor(silent=True)
 
@@ -437,7 +451,7 @@ grid.fit(x_train,y_train)
 print(" Results from Grid Search ")
 print("\n The best estimator across ALL searched params:\n", grid.best_estimator_)
 print("\n The best score across ALL searched params:\n", grid.best_score_)
-print("\n The best parameters across ALL searched params:\n", grid.best_params_)
+print("\n The best parameters across ALL searched params:\n", grid.best_params_)'''
 
 x_train, x_test, y_train, y_test = train_test_split(output_data, targets['Target_Val'], test_size=0.3, random_state=9000)
 
@@ -469,6 +483,38 @@ for thresh in thresholds:
             number_buys += 1
     returns.append(total_returns)
     buys.append(number_buys)
+
+pos_returns = 0
+pos_buys = 0
+neg_returns = 0
+neg_buys = 0
+every_returns = 0
+every_buys = 0
+for y in range(2, len(df)):
+    current = df['current'].iloc[y]
+    prev = df['current'].iloc[y-1]
+    actual = df['actual'].iloc[y]
+
+    if current > prev:
+        pos_returns += actual/current * 1000 - 1000
+        pos_buys += 1
+    if current < prev:
+        neg_returns += actual/current * 1000 - 1000
+        neg_buys += 1
+    every_returns += actual/current * 1000 - 1000
+    every_buys += 1
+
+thresholds.append('buypos')
+thresholds.append('buyneg')
+thresholds.append('buyevery')
+returns.append(pos_returns)
+returns.append(neg_returns)
+returns.append(every_returns)
+buys.append(pos_buys)
+buys.append(neg_buys)
+buys.append(every_buys)
+
+
 
 d = {'thresholds':thresholds,'returns':returns,'buys':buys}
 df = pd.DataFrame(data=d)
